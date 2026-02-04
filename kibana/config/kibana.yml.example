@@ -1,0 +1,24 @@
+#
+# ** THIS IS AN AUTO-GENERATED FILE **
+#
+
+## Default Kibana configuration for docker target
+#server.host: "0"
+#server.shutdownTimeout: "5s"
+#elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+#monitoring.ui.container.elasticsearch.enabled: true
+
+# Kibana 端口（对应 Compose 映射的 15601）
+server.port: 5601
+# 允许外部访问
+server.host: "0.0.0.0"
+# 连接 ES 地址（用容器别名，无需 IP）
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+# ES 认证账号（默认管理员账号）
+elasticsearch.username: "kibana_system"
+# ES 认证密码（自定义，需记住，后续登录 Kibana 用）
+elasticsearch.password: "lion123"
+# 中文界面（可选，推荐开启）
+i18n.locale: "zh-CN"
+# 关闭 SSL 验证（7.14.0 单节点环境可选）
+elasticsearch.ssl.verificationMode: none

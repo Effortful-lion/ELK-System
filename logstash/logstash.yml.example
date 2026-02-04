@@ -1,0 +1,9 @@
+# http.host: "0.0.0.0"
+# xpack.monitoring.elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+
+# Logstash 监控 API 端口（对应 Compose 映射的 19600）
+http.port: 9600
+# 允许外部访问监控 API
+http.host: "0.0.0.0"
+# 日志级别（调试用 info，生产用 warn）
+log.level: info

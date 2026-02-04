@@ -1,0 +1,107 @@
+# Docker Compose V2+ 配置（ELK 7.14.0 单机版，无网段冲突+无curl依赖健康检查）
+services:
+  # Elasticsearch 服务（内置wget健康检查，适配安全认证）
+  elasticsearch:
+    image: elasticsearch:7.14.0
+    container_name: elasticsearch
+    privileged: true
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - TZ=Asia/Shanghai # 统一时区，避免日志时间错乱
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ./es/config:/usr/share/elasticsearch/config
+      - ./es/data:/usr/share/elasticsearch/data
+      - ./es/plugins:/usr/share/elasticsearch/plugins
+    networks:
+      - base-env-network
+    restart: always
+    # 无依赖健康检查：内置wget，URL带账号密码，单节点用yellow状态
+    healthcheck:
+      test: ["CMD", "wget", "--no-check-certificate", "-q", "-O", "-", "http://elastic:lion123@localhost:9200/_cluster/health?wait_for_status=yellow&timeout=2s"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  # Kibana 服务（依赖ES健康就绪）
+  kibana:
+    image: elastic/kibana:7.14.0
+    container_name: kibana
+    privileged: true
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - I18N_LOCALE=zh-CN
+      - TZ=Asia/Shanghai
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./kibana/config:/usr/share/kibana/config
+      - ./kibana/plugins:/usr/share/kibana/plugins
+    networks:
+      - base-env-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: always
+
+  # Logstash 服务（nc端口检测健康检查，无依赖）
+  logstash:
+    image: elastic/logstash:7.14.0
+    container_name: logstash
+    privileged: true
+    environment:
+      - LS_JAVA_OPTS=-Xms512m -Xmx512m
+      - TZ=Asia/Shanghai
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:rw
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+    networks:
+      - base-env-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: always
+    # 无依赖健康检查：nc检测9600监控端口，端口通=5044端口就绪
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9600"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+      start_period: 10s
+
+  # Filebeat 服务（依赖ES+Logstash健康就绪，彻底避免连接拒绝）
+  filebeat:
+    image: elastic/filebeat:7.14.0
+    container_name: filebeat
+    privileged: true
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./filebeat/config/filebeat.yaml:/usr/share/filebeat/filebeat.yaml
+      - D:/goCode/workspace/ELK/logs:/var/log
+      - /etc/resolv.conf:/etc/resolv.conf:ro # 挂载宿主机DNS，兜底解析
+    networks:
+      - base-env-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    restart: always
+    command: ["filebeat", "-e", "-c", "/usr/share/filebeat/filebeat.yaml", "--strict.perms=false"]
+
+# 网络配置：删除自定义网段，保留DNS配置，Docker自动分配无冲突网段（核心改点）
+networks:
+  base-env-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1500
+      com.docker.network.dns: 8.8.8.8 # 谷歌DNS，解决容器内解析失败

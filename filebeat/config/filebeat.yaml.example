@@ -1,0 +1,30 @@
+# Filebeat 7.14.0 基础配置（适配你的ELK环境）
+filebeat.inputs:
+  # 采集Docker容器日志（核心，适配你的场景）
+  - type: container
+    enable: false # 控制收集开关
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    processors:
+      - add_docker_metadata: ~
+  # 采集宿主机系统日志（可选，按需保留）
+  - type: log
+    enable: true # 控制收集开关
+    paths:
+      #- /data/project1/logs/*.log # linux
+      - ./logs/*.log
+
+# 输出到Logstash（容器间通过服务名访问，Compose网络内互通）
+output.logstash:
+  hosts: ["logstash:5044"]
+
+# 关闭Elasticsearch输出（避免冲突）
+output.elasticsearch:
+  enabled: false
+
+# 基础配置
+setup.kibana:
+  host: "kibana:5601"
+setup.ilm.enabled: false
+logging.level: info
+logging.to_files: false

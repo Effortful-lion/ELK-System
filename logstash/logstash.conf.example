@@ -1,0 +1,31 @@
+#input {
+#  beats {
+#    port => 5044
+#  }
+#}
+#
+#output {
+#  stdout {
+#    codec => rubydebug
+#  }
+#}
+
+input {
+  beats {
+    port => 5044
+  }
+}
+
+output {
+  # 增加
+  elasticsearch {
+    hosts => ["http://elasticsearch:9200"]
+    user => "elastic"
+    password => "lion123"
+    index => "filebeat-search-%{+YYYY.MM.dd}"
+  }
+  # 打印到控制台，方便你用 docker logs 查看
+  stdout { codec => rubydebug }
+}
+
+
