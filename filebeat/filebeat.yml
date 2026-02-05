@@ -1,0 +1,36 @@
+# 7.14.0版本专属：禁用配置文件权限校验（Windows必加，最顶部）
+strict.perms: false
+
+# Filebeat 7.14.0 基础配置（适配你的ELK环境）
+filebeat.inputs:
+  # 采集Docker容器日志（核心，适配你的场景）
+  - type: container
+    enabled: false # 控制收集开关
+    paths:
+      - /var/lib/docker/containers/*/*.log  # 采集路径是 Docker 容器日志的默认路径,每个容器一个日志文件，以容器 ID 命名
+    processors:
+      - add_docker_metadata: ~ # 自动追加容器元数据（容器名、镜像名等）
+  # 采集宿主机系统日志（可选，按需保留）
+  - type: log
+    enabled: true # 控制收集开关
+    paths:
+      - /data/logs/*.log  # 容器内实际路径，对应Compose的./logs:/data/logs:ro【必配】
+    # 新增3个配置，强制触发采集
+    ignore_older: 0  # 关闭历史文件忽略（采集所有.log文件，包括已存在的）
+    scan_frequency: 10s  # 每10秒扫描一次文件变化（默认10秒，显式配置确保生效）
+    tail_files: false  # 关闭"只采集新增内容"，采集整个文件（包括历史内容）
+
+# 输出到Logstash（容器间通过服务名访问，Compose网络内互通）
+output.logstash:
+  hosts: ["logstash:5044"]
+
+# 关闭Elasticsearch输出（避免冲突）
+output.elasticsearch:
+  enabled: false
+
+# 基础配置
+setup.kibana:
+  host: "kibana:5601"
+setup.ilm.enabled: false
+logging.level: info
+logging.to_files: false

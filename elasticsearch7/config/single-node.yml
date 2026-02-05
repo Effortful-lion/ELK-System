@@ -1,0 +1,22 @@
+# 默认
+# cluster.name: "docker-cluster"
+# network.host: 0.0.0.0
+
+# 集群名称（自定义）
+cluster.name: elasticsearch-cluster
+# 节点名称
+node.name: es-node-1
+# 允许外部访问（0.0.0.0 表示所有IP）
+network.host: 0.0.0.0
+# HTTP 端口（对应 Compose 映射的 9200）
+http.port: 9200
+# 单节点模式（核心！否则 ES 会以集群模式启动，找不到节点崩溃）
+discovery.type: single-node
+# 开启 ED 账号密码安全认证（7.14.0 需手动开，8.x 默认开启）
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+# 关闭HTTPS（单节点测试环境，无需配置证书，仅开启账号密码）
+xpack.security.http.ssl.enabled: false
+# 关闭内存检测（WSL 环境可选，避免启动警告）
+bootstrap.memory_lock: false
+bootstrap.system_call_filter: false

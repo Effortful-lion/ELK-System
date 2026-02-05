@@ -1,31 +1,18 @@
-#input {
-#  beats {
-#    port => 5044
-#  }
-#}
-#
-#output {
-#  stdout {
-#    codec => rubydebug
-#  }
-#}
-
 input {
   beats {
     port => 5044
+    host => "0.0.0.0" # 监听所有网卡，对接Filebeat
   }
 }
 
 output {
-  # 增加
   elasticsearch {
     hosts => ["http://elasticsearch:9200"]
     user => "elastic"
-    password => "lion123"
+    password => "lion123" # 确认是你的ES elastic真实密码，错了会连接失败
     index => "filebeat-search-%{+YYYY.MM.dd}"
+    ssl => false # 核心补充：关闭SSL，适配未配置证书的单节点ES
   }
-  # 打印到控制台，方便你用 docker logs 查看
+  # 控制台打印日志，方便排查
   stdout { codec => rubydebug }
 }
-
-

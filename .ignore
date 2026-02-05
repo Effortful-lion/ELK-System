@@ -1,0 +1,5 @@
+*.log
+.trae/
+.git
+.idea/
+.vscode/

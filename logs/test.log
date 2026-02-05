@@ -38,3 +38,5 @@
 2026-02-05 11:23:30 [ERROR] [file-upload] 用户[1003]上传文件失败，文件大小102MB，超出限制50MB，错误码：413
 2026-02-05 11:24:15 [INFO] [task-scheduler] 每日数据统计任务完成，处理订单数1289，成功1287，失败2
 2026-02-05 11:24:40 [WARN] [network] 服务间调用延迟过高，from:user-service to:order-service，耗时300ms（阈值200ms）
+2026-02-05 11:24:40 [WARN] [network] 服务间调用延迟过高，from:user-service to:order-service，耗时300ms（阈值200ms）
+2026-02-05 11:24:15 [INFO] [task-scheduler] 每日数据统计任务完成，处理订单数1289，成功1287，失败2
